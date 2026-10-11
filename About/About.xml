@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Tactical Combat AI</name>
+  <author>Community source project</author>
+  <packageId>community.tacticalcombatai</packageId>
+  <supportedVersions><li>1.6</li></supportedVersions>
+  <modDependencies>
+    <li><packageId>brrainz.harmony</packageId><displayName>Harmony</displayName></li>
+  </modDependencies>
+  <loadAfter><li>brrainz.harmony</li></loadAfter>
+  <description>Experimental faction-aware battlefield tending, downed-ally evacuation, ranged covering fire, cover-to-cover advances, and squad target coordination. Requires compiled DLL.</description>
+</ModMetaData>
