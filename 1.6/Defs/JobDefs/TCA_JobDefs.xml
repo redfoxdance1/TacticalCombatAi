@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>TCA_EvacuateAlly</defName>
+    <driverClass>TacticalCombatAI.JobDriver_EvacuateAlly</driverClass>
+    <reportString>evacuating TargetA</reportString>
+    <casualInterruptible>true</casualInterruptible>
+    <playerInterruptible>true</playerInterruptible>
+  </JobDef>
+  <JobDef>
+    <defName>TCA_FieldTend</defName>
+    <driverClass>TacticalCombatAI.JobDriver_FieldTend</driverClass>
+    <reportString>stabilizing TargetA</reportString>
+    <casualInterruptible>true</casualInterruptible>
+    <playerInterruptible>true</playerInterruptible>
+  </JobDef>
+</Defs>
