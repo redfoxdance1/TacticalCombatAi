@@ -1,0 +1,17 @@
+# Build outputs / RimWorld binaries
+**/bin/
+**/obj/
+1.6/Assemblies/
+*.dll
+*.pdb
+
+# Generated Python files
+__pycache__/
+*.py[cod]
+
+# Personal/editor files
+.vs/
+.vscode/
+*.user
+*.suo
+.DS_Store
