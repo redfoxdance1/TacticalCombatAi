@@ -98,7 +98,10 @@ namespace TacticalCombatAI
                 // Combat Extended owns its own reload, suppression and attack jobs.
                 // Do not replace an unfamiliar job returned by its combat AI.
                 if (ModsConfig.IsActive("ceteam.combatextended") && __result != null &&
-                    __result.def != JobDefOf.Goto && __result.def != JobDefOf.Wait_Combat)
+                    __result.def != JobDefOf.Goto &&
+                    __result.def != JobDefOf.Wait_Combat &&
+                    __result.def != JobDefOf.AttackStatic &&
+                    __result.def != JobDefOf.AttackMelee)
                     return;
 
                 Map map = pawn.Map;
