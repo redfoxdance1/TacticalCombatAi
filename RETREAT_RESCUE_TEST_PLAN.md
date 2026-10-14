@@ -19,7 +19,7 @@
 | R13 | Existing in-game Kidnap raid order and guest evacuation | Existing kidnapping and `TakeWoundedGuest` jobs are not overwritten |
 | R14 | Flee/exit through breakable wall requiring dig job | Existing dig/attack job not replaced; no rescue if safe exit route invalid |
 | R15 | Raiders lose the fight and their name labels turn blue; a downed same-faction raider is nearby | A fleeing raider using any vanilla ExitMap job giver attempts to carry the ally off-map (when reachable); no dependence on label color |
-| R16 | Raider still has red name and is on a Kidnap or Steal duty | The original kidnap/steal action is preserved; no unintended rescue override |
+| R16 | Raider still has red name and is on a Kidnap or Steal duty | An active Kidnap/Steal job is preserved; if vanilla instead returns an exit-map Goto, same-faction casualty rescue remains possible as before |
 | R17 | Enable **Log retreat-rescue diagnostics** and trigger panic retreat | Log records giver type, duty, original job, exit flag and successful rescue; disabling logging stops messages |
 | R18 | Run with Combat Extended installed; raider reloads, suppresses or uses CE-specific combat job | TCA does not replace CE's custom combat jobs; test medic, evac, retreat and movement separately |
 
