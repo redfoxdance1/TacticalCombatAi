@@ -51,7 +51,7 @@ assert 'downedAllies28=' in code
 # Vanilla uses the same Kidnap job + target pair in TakeWoundedGuest.
 assert 'JobMaker.MakeJob(JobDefOf.Kidnap, patient, exitCell)' in code
 assert 'rescue.count = 1;' in code
-assert 'JobDefOf.Kidnap' not in code.split('internal static class RetreatCasualtyRescuePatch')[0]
+assert 'JobDefOf.Kidnap' not in code.split('internal static class CombatDecisionPatch')[1].split('internal static class TacticalMentalStateDefOf')[0]
 # For active combat, use a custom near-cell drop and a finish cleanup.
 assert 'AddFinishAction(condition =>' in code
 assert 'Toils_Haul.StartCarryThing(TargetIndex.A, false, false, false)' in code
