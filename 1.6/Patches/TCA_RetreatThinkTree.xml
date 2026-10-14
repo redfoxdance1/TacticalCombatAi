@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- MentalStateNonCritical already handles vanilla PanicFlee. Add a
+       distinct state branch, leaving the vanilla branch untouched. -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ThinkTreeDef[defName="MentalStateNonCritical"]/thinkRoot/subNodes</xpath>
+    <value>
+      <li Class="ThinkNode_ConditionalMentalState">
+        <state>TCA_Retreating</state>
+        <subNodes>
+          <li Class="TacticalCombatAI.JobGiver_RetreatWithAlly" />
+          <li Class="JobGiver_ExitMapPanic" />
+          <li Class="JobGiver_WanderAnywhere">
+            <maxDanger>Some</maxDanger>
+            <locomotionUrgency>Jog</locomotionUrgency>
+          </li>
+        </subNodes>
+      </li>
+    </value>
+  </Operation>
+</Patch>
