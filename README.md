@@ -1,6 +1,6 @@
 # Tactical Combat AI — RimWorld 1.6
 
-**Status: experimental prototype. Automated compilation is being established; no in-game validation yet.**
+**Status: experimental test build. Compiles successfully against RimWorld 1.6 reference assemblies in GitHub Actions; not yet validated in-game.**
 
 A Harmony-based mod prototype adding tactical decisions for **non-player humanlike faction pawns** (hostile raiders and allied NPCs).
 
