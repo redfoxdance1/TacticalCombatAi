@@ -54,7 +54,7 @@ namespace TacticalCombatAI
             list.Begin(area);
             list.CheckboxLabeled("Field tending (no medicine)", ref Settings.Medics);
             list.CheckboxLabeled("Evacuate downed allies to safer ground", ref Settings.Evacuation);
-            list.CheckboxLabeled("Carry downed allies off-map during retreat (vanilla Kidnap job)", ref Settings.RetreatRescue);
+            list.CheckboxLabeled("Rescue allies during retreat (50% of panic fleeing becomes Retreating)", ref Settings.RetreatRescue);
             list.CheckboxLabeled("Log retreat-rescue diagnostics (for testing)", ref Settings.RetreatDiagnostics);
             list.CheckboxLabeled("Ranged covering fire", ref Settings.CoveringFire);
             list.CheckboxLabeled("Cover-to-cover advances", ref Settings.TacticalAdvance);
@@ -277,6 +277,92 @@ namespace TacticalCombatAI
                 if (score > bestScore) { bestScore = score; result = c; }
             }
             return result;
+        }
+    }
+
+    // Panic fleeing is a vanilla mental state; raid stealing and kidnapping are
+    // duties. Convert half of hostile humanlike panic starts into a dedicated
+    // mental state with a rescue-first think tree, without changing the raid lord.
+    [DefOf]
+    internal static class TacticalMentalStateDefOf
+    {
+        public static MentalStateDef TCA_Retreating;
+        static TacticalMentalStateDefOf()
+        {
+            DefOfHelper.EnsureInitializedInCtor(typeof(TacticalMentalStateDefOf));
+        }
+    }
+
+    [HarmonyPatch(typeof(MentalStateHandler), nameof(MentalStateHandler.TryStartMentalState))]
+    internal static class RetreatingMentalStatePatch
+    {
+        [HarmonyPrefix]
+        private static void Prefix(Pawn ___pawn, ref MentalStateDef stateDef)
+        {
+            if (stateDef != MentalStateDefOf.PanicFlee || ___pawn == null ||
+                TacticalMod.Settings == null || !TacticalMod.Settings.RetreatRescue) return;
+
+            // A repeated request to panic should not reroll an existing retreat.
+            if (___pawn.MentalStateDef == TacticalMentalStateDefOf.TCA_Retreating)
+            {
+                stateDef = TacticalMentalStateDefOf.TCA_Retreating;
+                return;
+            }
+
+            if (!___pawn.Spawned || ___pawn.Dead || ___pawn.Downed ||
+                !___pawn.RaceProps.Humanlike || ___pawn.IsPrisoner ||
+                ___pawn.Faction == null || ___pawn.Faction == Faction.OfPlayer ||
+                !___pawn.Faction.HostileTo(Faction.OfPlayer)) return;
+
+            if (Rand.Chance(0.5f))
+                stateDef = TacticalMentalStateDefOf.TCA_Retreating;
+        }
+
+        [HarmonyPostfix]
+        private static void Postfix(Pawn ___pawn, MentalStateDef stateDef, bool __result)
+        {
+            if (__result && stateDef == TacticalMentalStateDefOf.TCA_Retreating &&
+                TacticalMod.Settings != null && TacticalMod.Settings.RetreatDiagnostics)
+                Log.Message("[TacticalCombatAI] " + ___pawn.LabelShortCap +
+                            " entered Retreating; will seek a wounded faction ally before exiting.");
+        }
+    }
+
+    // The Retreating mental-state think tree invokes this before vanilla
+    // JobGiver_ExitMapPanic. It never steals or kidnaps enemies.
+    public sealed class JobGiver_RetreatWithAlly : ThinkNode_JobGiver
+    {
+        protected override Job TryGiveJob(Pawn pawn)
+        {
+            if (pawn == null || pawn.MentalStateDef != TacticalMentalStateDefOf.TCA_Retreating ||
+                TacticalMod.Settings == null || !TacticalMod.Settings.RetreatRescue ||
+                !pawn.Spawned || pawn.Dead || pawn.Downed || pawn.Faction == null ||
+                pawn.carryTracker == null || pawn.carryTracker.CarriedThing != null ||
+                !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation))
+                return null;
+
+            // If we cannot reach the exit with the casualty, fall through to
+            // vanilla panic escape instead of leaving a pawn stranded.
+            IntVec3 exitCell;
+            if (!RCellFinder.TryFindBestExitSpot(pawn, out exitCell) ||
+                !exitCell.IsValid || !pawn.CanReach(exitCell, PathEndMode.OnCell, Danger.Some))
+                return null;
+
+            Pawn patient = pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction)
+                .Where(p => p != pawn && p.Spawned && !p.Dead && p.Downed &&
+                            p.RaceProps.Humanlike && !p.IsPrisoner &&
+                            p.Position.InHorDistOf(pawn.Position, 28f) &&
+                            pawn.CanReserveAndReach(p, PathEndMode.OnCell, Danger.Some))
+                .OrderBy(p => p.Position.DistanceToSquared(pawn.Position))
+                .FirstOrDefault();
+            if (patient == null) return null;
+
+            Job rescue = JobMaker.MakeJob(JobDefOf.Kidnap, patient, exitCell);
+            rescue.count = 1;
+            if (TacticalMod.Settings.RetreatDiagnostics)
+                Log.Message("[TacticalCombatAI] Retreating rescue: " + pawn.LabelShortCap +
+                            " carrying " + patient.LabelShortCap + " off-map.");
+            return rescue;
         }
     }
 
