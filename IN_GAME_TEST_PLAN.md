@@ -40,15 +40,24 @@ If startup fails, stop testing and capture the first red error.
       to a reachable safer cell and drops them.
 - [ ] **Evacuation interruption:** interrupt the rescuer and confirm the
       casualty is not permanently stuck being carried.
-- [ ] **Retreat rescue:** when raiders retreat, check whether they pick up
-      same-faction downed allies, leave the map, and do **not** produce
-      unexpected prisoner/kidnapping world-state effects.
+- [ ] **Retreat rescue (red labels):** confirm existing extraction still works
+      for raiders that have not switched to panic-fleeing.
+- [ ] **Retreat rescue (blue labels):** make raiders flee in panic with a downed
+      same-faction pawn nearby; verify that an exiting pawn attempts pickup.
+      If not, enable **Log retreat-rescue diagnostics (for testing)** and copy
+      the `Exit job:` lines from Player.log.
+- [ ] **World state:** verify rescued raiders leave the map without unexpected
+      prisoner/kidnapping effects.
 - [ ] **Covering fire:** a ranged pawn in cover waits and still attacks
       enemies through vanilla combat behavior.
 - [ ] **Advance:** some ranged pawns move toward reachable cover, without
       abandoning melee or creating an endless movement loop.
 - [ ] **Coordination:** multiple same-faction ranged pawns can share
       a target without shooting through walls or attacking friendlies.
+- [ ] **Combat Extended:** with CE installed, verify NPCs still reload and
+      perform CE combat jobs. Then test tending, short-range evacuation,
+      panic-retreat extraction, cover and squad targeting individually.
+      This is a compatibility safeguard, not yet verified full integration.
 - [ ] **Stress test:** a large raid causes no major stutters, repeated
       errors, or rapidly repeating jobs.
 

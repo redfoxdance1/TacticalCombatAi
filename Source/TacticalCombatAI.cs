@@ -14,6 +14,7 @@ namespace TacticalCombatAI
         public bool Medics = true;
         public bool Evacuation = true;
         public bool RetreatRescue = true;
+        public bool RetreatDiagnostics = false;
         public bool CoveringFire = true;
         public bool TacticalAdvance = true;
         public bool Coordination = true;
@@ -24,6 +25,7 @@ namespace TacticalCombatAI
             Scribe_Values.Look(ref Medics, "medics", true);
             Scribe_Values.Look(ref Evacuation, "evacuation", true);
             Scribe_Values.Look(ref RetreatRescue, "retreatRescue", true);
+            Scribe_Values.Look(ref RetreatDiagnostics, "retreatDiagnostics", false);
             Scribe_Values.Look(ref CoveringFire, "coveringFire", true);
             Scribe_Values.Look(ref TacticalAdvance, "tacticalAdvance", true);
             Scribe_Values.Look(ref Coordination, "coordination", true);
@@ -53,6 +55,7 @@ namespace TacticalCombatAI
             list.CheckboxLabeled("Field tending (no medicine)", ref Settings.Medics);
             list.CheckboxLabeled("Evacuate downed allies to safer ground", ref Settings.Evacuation);
             list.CheckboxLabeled("Carry downed allies off-map during retreat (vanilla Kidnap job)", ref Settings.RetreatRescue);
+            list.CheckboxLabeled("Log retreat-rescue diagnostics (for testing)", ref Settings.RetreatDiagnostics);
             list.CheckboxLabeled("Ranged covering fire", ref Settings.CoveringFire);
             list.CheckboxLabeled("Cover-to-cover advances", ref Settings.TacticalAdvance);
             list.CheckboxLabeled("Shared fire-team targets", ref Settings.Coordination);
@@ -92,6 +95,15 @@ namespace TacticalCombatAI
 
             try
             {
+                // Combat Extended owns its own reload, suppression and attack jobs.
+                // Do not replace an unfamiliar job returned by its combat AI.
+                if (ModsConfig.IsActive("ceteam.combatextended") && __result != null &&
+                    __result.def != JobDefOf.Goto &&
+                    __result.def != JobDefOf.Wait_Combat &&
+                    __result.def != JobDefOf.AttackStatic &&
+                    __result.def != JobDefOf.AttackMelee)
+                    return;
+
                 Map map = pawn.Map;
                 List<Pawn> allies = new List<Pawn>();
                 List<Pawn> enemies = new List<Pawn>();
@@ -272,15 +284,17 @@ namespace TacticalCombatAI
     // non-hostile casualty: JobDriver_Kidnap inherits TakeAndExitMap and
     // provides pickup, hauling and map exit without our own exit-map driver.
     //
-    // JobGiver_ExitMapBest inherits TryGiveJob from JobGiver_ExitMap, so
-    // patch the DECLARING base method. Gate to ExitMapBest instances and an
-    // already-selected vanilla exit-map Goto; never replace a fight or dig job.
+    // Panic-fleeing raiders may use a different JobGiver_ExitMap subclass
+    // than the one used by kidnap/steal duties. Patch the DECLARING base method
+    // and recognize ANY subclass, but only replace an already-selected vanilla
+    // exit-map Goto; never replace a fight, dig, or special extraction job.
     [HarmonyPatch(typeof(JobGiver_ExitMap), "TryGiveJob")]
     internal static class RetreatCasualtyRescuePatch
     {
         private sealed class RetreatState
         {
             internal int LastRescue = -10000;
+            internal int LastDiagnostic = -10000;
         }
 
         private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Pawn, RetreatState> States =
@@ -291,16 +305,33 @@ namespace TacticalCombatAI
         private static void Postfix(JobGiver_ExitMap __instance, Pawn pawn, ref Job __result)
         {
             if (TacticalMod.Settings == null || !TacticalMod.Settings.RetreatRescue) return;
-            if (!(__instance is JobGiver_ExitMapBest)) return;
             if (!CombatDecisionPatch.Eligible(pawn)) return;
-            // An exit-map move proves the vanilla AI has chosen to leave.
-            // Never replace a pre-existing Kidnap, hostile extraction or dig job.
-            if (__result == null || __result.def != JobDefOf.Goto || !__result.exitMapOnArrival) return;
-            if (pawn.carryTracker == null || pawn.carryTracker.CarriedThing != null) return;
-            if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation)) return;
+            // Preserve existing behavior for kidnap/steal duties when they are
+            // already exiting empty-handed. Active Kidnap/Steal jobs are protected
+            // by the strict Goto + exitMapOnArrival check below.
+            string dutyName = pawn.mindState.duty?.def?.defName;
 
             RetreatState state = States.GetValue(pawn, p => new RetreatState());
             int tick = Find.TickManager.TicksGame;
+            // Opt-in, throttled diagnostics help identify the panic-flee job giver
+            // if a mod changes how exit jobs are issued.
+            if (TacticalMod.Settings.RetreatDiagnostics && tick - state.LastDiagnostic >= 600)
+            {
+                state.LastDiagnostic = tick;
+                Log.Message("[TacticalCombatAI] Exit job: pawn=" + pawn.LabelShortCap +
+                            ", giver=" + __instance.GetType().Name +
+                            ", duty=" + (dutyName ?? "none") +
+                            ", job=" + (__result?.def?.defName ?? "none") +
+                            ", exits=" + (__result != null && __result.exitMapOnArrival) +
+                            ", downedAllies28=" + pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction)
+                                .Count(p => p != pawn && p.Downed && p.Position.InHorDistOf(pawn.Position, 28f)));
+            }
+
+            // An exit-map Goto proves the AI has decided to leave.
+            // Do not replace an existing Kidnap, dig, fight or CE-specific job.
+            if (__result == null || __result.def != JobDefOf.Goto || !__result.exitMapOnArrival) return;
+            if (pawn.carryTracker == null || pawn.carryTracker.CarriedThing != null) return;
+            if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation)) return;
             if (tick - state.LastRescue < 600) return;
             try
             {
@@ -311,7 +342,7 @@ namespace TacticalCombatAI
                 Pawn patient = pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction)
                     .Where(p => p != pawn && p.Spawned && !p.Dead && p.Downed &&
                                 p.RaceProps.Humanlike && !p.IsPrisoner &&
-                                p.Position.InHorDistOf(pawn.Position, 18f) &&
+                                p.Position.InHorDistOf(pawn.Position, 28f) &&
                                 pawn.CanReserveAndReach(p, PathEndMode.OnCell, Danger.Some))
                     .OrderBy(p => p.Position.DistanceToSquared(pawn.Position))
                     .FirstOrDefault();
@@ -322,6 +353,9 @@ namespace TacticalCombatAI
                 Job rescue = JobMaker.MakeJob(JobDefOf.Kidnap, patient, exitCell);
                 rescue.count = 1;
                 state.LastRescue = tick;
+                if (TacticalMod.Settings.RetreatDiagnostics)
+                    Log.Message("[TacticalCombatAI] Retreat rescue: " + pawn.LabelShortCap +
+                                " carrying " + patient.LabelShortCap + " via " + __instance.GetType().Name);
                 __result = rescue;
             }
             catch (Exception ex)

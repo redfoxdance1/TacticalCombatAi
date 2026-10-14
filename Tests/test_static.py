@@ -26,13 +26,28 @@ assert code.count('{') == code.count('}')
 # The retreat hook must attach to the method declared in JobGiver_ExitMap,
 # which JobGiver_ExitMapBest inherits, NOT an override on the derived class.
 assert '[HarmonyPatch(typeof(JobGiver_ExitMap), "TryGiveJob")]' in code
-assert 'if (!(__instance is JobGiver_ExitMapBest)) return;' in code
+# All JobGiver_ExitMap subclasses must be eligible: panic fleeing may not
+# use JobGiver_ExitMapBest, while the exit-map Goto is still mandatory.
+assert 'if (!(__instance is JobGiver_ExitMapBest)) return;' not in code
+assert 'if (dutyName == "Kidnap"' not in code
+assert 'string dutyName = pawn.mindState.duty?.def?.defName;' in code
+assert 'RetreatDiagnostics = false' in code
+assert 'Log retreat-rescue diagnostics (for testing)' in code
+assert 'giver=" + __instance.GetType().Name' in code
+# Optional Combat Extended integration must not override its custom jobs.
+assert 'ModsConfig.IsActive("ceteam.combatextended")' in code
+assert '__result.def != JobDefOf.Goto' in code
+assert '__result.def != JobDefOf.Wait_Combat' in code
+assert '__result.def != JobDefOf.AttackStatic' in code
+assert '__result.def != JobDefOf.AttackMelee' in code
 # Never turn arbitrary movement/combat/dig actions into a kidnapping job.
 assert '__result.def != JobDefOf.Goto || !__result.exitMapOnArrival' in code
 # Keep vanilla victim selection out of this patch; only same-faction downed NPCs.
 assert 'pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction)' in code
 assert 'p.Downed' in code and '!p.Dead' in code and '!p.IsPrisoner' in code
 assert 'pawn.CanReserveAndReach(p, PathEndMode.OnCell, Danger.Some)' in code
+assert 'p.Position.InHorDistOf(pawn.Position, 28f)' in code
+assert 'downedAllies28=' in code
 # Vanilla uses the same Kidnap job + target pair in TakeWoundedGuest.
 assert 'JobMaker.MakeJob(JobDefOf.Kidnap, patient, exitCell)' in code
 assert 'rescue.count = 1;' in code
@@ -53,4 +68,4 @@ assert 'Lib.Harmony.Ref' in project
 assert 'RimWorldDir' not in project
 assert 'RetreatRescue = true' in code
 assert 'ref RetreatRescue, "retreatRescue", true' in code
-print('PASS: XML/project parses, base-method Harmony patch, retreat-only gate, same-faction casualty, vanilla pickup, cleanup and settings structural checks. NOT compiled or game-tested.')
+print('PASS: XML/project parses, base-method Harmony patch, panic-retreat giver coverage, same-faction casualty, vanilla pickup, cleanup and settings structural checks. NOT compiled or game-tested.')
