@@ -26,7 +26,16 @@ assert code.count('{') == code.count('}')
 # The retreat hook must attach to the method declared in JobGiver_ExitMap,
 # which JobGiver_ExitMapBest inherits, NOT an override on the derived class.
 assert '[HarmonyPatch(typeof(JobGiver_ExitMap), "TryGiveJob")]' in code
-assert 'if (!(__instance is JobGiver_ExitMapBest)) return;' in code
+# All JobGiver_ExitMap subclasses must be eligible: panic fleeing may not
+# use JobGiver_ExitMapBest, while the exit-map Goto is still mandatory.
+assert 'if (!(__instance is JobGiver_ExitMapBest)) return;' not in code
+assert 'dutyName == "Kidnap" || dutyName == "Steal" || dutyName == "TakeWoundedGuest"' in code
+assert 'RetreatDiagnostics = false' in code
+assert 'Log retreat-rescue diagnostics (for testing)' in code
+assert 'giver=" + __instance.GetType().Name' in code
+# Optional Combat Extended integration must not override its custom jobs.
+assert 'ModsConfig.IsActive("ceteam.combatextended")' in code
+assert '__result.def != JobDefOf.Goto && __result.def != JobDefOf.Wait_Combat' in code
 # Never turn arbitrary movement/combat/dig actions into a kidnapping job.
 assert '__result.def != JobDefOf.Goto || !__result.exitMapOnArrival' in code
 # Keep vanilla victim selection out of this patch; only same-faction downed NPCs.
@@ -53,4 +62,4 @@ assert 'Lib.Harmony.Ref' in project
 assert 'RimWorldDir' not in project
 assert 'RetreatRescue = true' in code
 assert 'ref RetreatRescue, "retreatRescue", true' in code
-print('PASS: XML/project parses, base-method Harmony patch, retreat-only gate, same-faction casualty, vanilla pickup, cleanup and settings structural checks. NOT compiled or game-tested.')
+print('PASS: XML/project parses, base-method Harmony patch, panic-retreat giver coverage, same-faction casualty, vanilla pickup, cleanup and settings structural checks. NOT compiled or game-tested.')
