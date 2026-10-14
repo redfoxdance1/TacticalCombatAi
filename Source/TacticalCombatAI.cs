@@ -387,7 +387,7 @@ namespace TacticalCombatAI
             this.FailOn(() => job.GetTarget(TargetIndex.A).Thing is Pawn p && (!p.Downed || p.Dead));
             // If combat or pathfinding interrupts our short-range rescue,
             // never leave the patient attached to a pawn that has resumed fighting.
-            AddFinishAction(() =>
+            AddFinishAction(condition =>
             {
                 if (!pawn.Spawned || pawn.carryTracker == null ||
                     pawn.carryTracker.CarriedThing != job.GetTarget(TargetIndex.A).Thing) return;
