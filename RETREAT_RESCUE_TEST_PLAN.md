@@ -9,7 +9,7 @@
 | R3 | One same-faction downed raider, but rescuer is still fighting | No map-exit extraction job from this hook; battlefield evacuation may take patient to safe ground |
 | R4 | Downed pawn already reserved by an allied medic, or behind blocked terrain | Rescuer does not assign extraction job; default vanilla exit is preserved |
 | R5 | Two downed same-faction raiders and two rescuers retreat | At most one rescuer reserves/picks up each casualty; no duplicate pickup jobs |
-| R6 | Same-faction downed pawn is 20+ cells away | Rescuer keeps vanilla exit; patient not selected |
+| R6 | Same-faction downed pawn is 30+ cells away | Rescuer keeps vanilla exit; patient not selected |
 | R7 | Same-faction pawn is dead, awake or prisoner | Not selected |
 | R8 | Downed friendly visitor (non-player) retreats | Rescuer may extract same-faction wounded visitor; actual vanilla world-state should be inspected |
 | R9 | Disable **Carry downed allies off-map during retreat** | Rescuer uses vanilla retreat logic; other tactical settings work independently |
