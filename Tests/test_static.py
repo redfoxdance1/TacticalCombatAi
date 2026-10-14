@@ -46,6 +46,8 @@ assert '__result.def != JobDefOf.Goto || !__result.exitMapOnArrival' in code
 assert 'pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction)' in code
 assert 'p.Downed' in code and '!p.Dead' in code and '!p.IsPrisoner' in code
 assert 'pawn.CanReserveAndReach(p, PathEndMode.OnCell, Danger.Some)' in code
+assert 'p.Position.InHorDistOf(pawn.Position, 28f)' in code
+assert 'downedAllies28=' in code
 # Vanilla uses the same Kidnap job + target pair in TakeWoundedGuest.
 assert 'JobMaker.MakeJob(JobDefOf.Kidnap, patient, exitCell)' in code
 assert 'rescue.count = 1;' in code
