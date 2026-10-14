@@ -303,9 +303,10 @@ namespace TacticalCombatAI
         {
             if (TacticalMod.Settings == null || !TacticalMod.Settings.RetreatRescue) return;
             if (!CombatDecisionPatch.Eligible(pawn)) return;
-            // Kidnap and steal are different raid duties. Do not redirect them.
+            // Preserve existing behavior for kidnap/steal duties when they are
+            // already exiting empty-handed. Active Kidnap/Steal jobs are protected
+            // by the strict Goto + exitMapOnArrival check below.
             string dutyName = pawn.mindState.duty?.def?.defName;
-            if (dutyName == "Kidnap" || dutyName == "Steal" || dutyName == "TakeWoundedGuest") return;
 
             RetreatState state = States.GetValue(pawn, p => new RetreatState());
             int tick = Find.TickManager.TicksGame;
