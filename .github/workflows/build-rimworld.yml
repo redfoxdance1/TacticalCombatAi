@@ -38,10 +38,11 @@ jobs:
           $dll = '1.6/Assemblies/TacticalCombatAI.dll'
           if (-not (Test-Path $dll)) { throw "Missing compiled DLL: $dll" }
           $mod = 'staging/TacticalCombatAI'
-          New-Item -ItemType Directory -Force "$mod/About", "$mod/1.6/Assemblies", "$mod/1.6/Defs/JobDefs" | Out-Null
+          New-Item -ItemType Directory -Force "$mod/About", "$mod/1.6/Assemblies", "$mod/1.6/Defs", "$mod/1.6/Patches" | Out-Null
           Copy-Item 'About/About.xml' "$mod/About/About.xml"
           Copy-Item 'LoadFolders.xml' "$mod/LoadFolders.xml"
-          Copy-Item '1.6/Defs/JobDefs/TCA_JobDefs.xml' "$mod/1.6/Defs/JobDefs/TCA_JobDefs.xml"
+          Copy-Item '1.6/Defs/*' "$mod/1.6/Defs/" -Recurse -Force
+          Copy-Item '1.6/Patches/*' "$mod/1.6/Patches/" -Recurse -Force
           Copy-Item $dll "$mod/1.6/Assemblies/TacticalCombatAI.dll"
           Copy-Item 'README.md' "$mod/README.md"
           Compress-Archive -Path $mod -DestinationPath 'TacticalCombatAI-RimWorld-1.6-test.zip' -Force

@@ -11,6 +11,7 @@ A Harmony-based mod prototype adding tactical decisions for **non-player humanli
 | Combat medics | Tend bleeding, downed or in-bed same-faction allies without medicine |
 | Battlefield evacuation | Carry nearby downed allies toward safer terrain and drop them |
 | Retreat extraction | Reuse RimWorld's vanilla `Kidnap` job to carry same-faction casualties off-map when retreating |
+| **Retreating mental state** | 50% of hostile humanlike panic-flee starts become **Retreating**: rescue a nearby downed faction ally, or escape normally if none can be carried |
 | Covering fire | Some shooters hold cover and use normal combat-wait auto-fire (no suppression effect) |
 | Tactical advances | Move ranged shooters to reachable positions with cover |
 | Coordination | Nearby same-faction soldiers prefer shared targets they can hit |
@@ -30,7 +31,7 @@ produces `TacticalCombatAI-RimWorld-1.6-test.zip` as a workflow artifact **only 
 4. Unzip the downloaded GitHub artifact to obtain `TacticalCombatAI-RimWorld-1.6-test.zip`.
 5. Extract that inner ZIP into RimWorld's `Mods` directory. It contains a single
    `TacticalCombatAI` folder with `About`, `LoadFolders.xml`, and
-   `1.6/Assemblies/TacticalCombatAI.dll` plus the custom JobDefs.
+   `1.6/Assemblies/TacticalCombatAI.dll` plus the custom JobDefs, MentalStateDefs and think-tree patch.
 6. Enable the **Harmony** mod before **Tactical Combat AI**, restart RimWorld 1.6,
    and test on a disposable save.
 
@@ -68,10 +69,14 @@ Consult [AUDIT_REPORT.md](AUDIT_REPORT.md) for risks and [RETREAT_RESCUE_TEST_PL
 - `Source/TacticalCombatAI.cs` — combat patches and field tend / evacuation jobs
 - `Source/TacticalCombatAI.csproj` — .NET Framework build project
 - `1.6/Defs/JobDefs/TCA_JobDefs.xml` — custom jobs
+- `1.6/Defs/MentalStateDefs/TCA_MentalStates.xml` — Retreating mental state
+- `1.6/Patches/TCA_RetreatThinkTree.xml` — rescue-first mental-state AI
 - `About/About.xml`, `LoadFolders.xml` — RimWorld metadata
 - `Build-Windows.ps1` — build helper
 - `Tests/test_static.py` — structural checks
 - `AUDIT_REPORT.md`, `RETREAT_RESCUE_TEST_PLAN.md` — limitations and manual tests
+
+Retreating only replaces the initial `PanicFlee` mental-state request for hostile humanlikes, at a 50% chance. The other half keep vanilla panic. The new state tries to carry a same-faction downed ally within 28 cells and falls back to vanilla panic exit if none is available. Stealing/kidnapping raid objectives remain untouched.
 
 The retreat job follows vanilla logic resembling `JobGiver_TakeWoundedGuest` and `JobDriver_Kidnap`. It must still be verified with the exact game build.
 

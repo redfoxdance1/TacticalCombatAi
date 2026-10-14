@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- Like vanilla PanicFlee, but with a rescue-first AI think tree. -->
+  <MentalStateDef ParentName="BaseMentalState">
+    <defName>TCA_Retreating</defName>
+    <label>retreating</label>
+    <stateClass>MentalState_PanicFlee</stateClass>
+    <category>Misc</category>
+    <nameColor>(0.55, 0.82, 0.64)</nameColor>
+    <baseInspectLine>Mental state: Retreating</baseInspectLine>
+    <blockNormalThoughts>true</blockNormalThoughts>
+    <unspawnedCanDo>true</unspawnedCanDo>
+  </MentalStateDef>
+</Defs>
