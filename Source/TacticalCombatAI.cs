@@ -322,7 +322,9 @@ namespace TacticalCombatAI
                             ", giver=" + __instance.GetType().Name +
                             ", duty=" + (dutyName ?? "none") +
                             ", job=" + (__result?.def?.defName ?? "none") +
-                            ", exits=" + (__result != null && __result.exitMapOnArrival));
+                            ", exits=" + (__result != null && __result.exitMapOnArrival) +
+                            ", downedAllies28=" + pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction)
+                                .Count(p => p != pawn && p.Downed && p.Position.InHorDistOf(pawn.Position, 28f)));
             }
 
             // An exit-map Goto proves the AI has decided to leave.
@@ -340,7 +342,7 @@ namespace TacticalCombatAI
                 Pawn patient = pawn.Map.mapPawns.SpawnedPawnsInFaction(pawn.Faction)
                     .Where(p => p != pawn && p.Spawned && !p.Dead && p.Downed &&
                                 p.RaceProps.Humanlike && !p.IsPrisoner &&
-                                p.Position.InHorDistOf(pawn.Position, 18f) &&
+                                p.Position.InHorDistOf(pawn.Position, 28f) &&
                                 pawn.CanReserveAndReach(p, PathEndMode.OnCell, Danger.Some))
                     .OrderBy(p => p.Position.DistanceToSquared(pawn.Position))
                     .FirstOrDefault();
