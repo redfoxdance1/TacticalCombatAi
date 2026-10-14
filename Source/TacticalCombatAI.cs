@@ -308,6 +308,8 @@ namespace TacticalCombatAI
                 stateDef = TacticalMentalStateDefOf.TCA_Retreating;
                 return;
             }
+            // Do not reroll an existing vanilla panic on repeated state requests.
+            if (___pawn.MentalStateDef == MentalStateDefOf.PanicFlee) return;
 
             if (!___pawn.Spawned || ___pawn.Dead || ___pawn.Downed ||
                 !___pawn.RaceProps.Humanlike || ___pawn.IsPrisoner ||
