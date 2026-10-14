@@ -38,7 +38,7 @@ assert 'JobMaker.MakeJob(JobDefOf.Kidnap, patient, exitCell)' in code
 assert 'rescue.count = 1;' in code
 assert 'JobDefOf.Kidnap' not in code.split('internal static class RetreatCasualtyRescuePatch')[0]
 # For active combat, use a custom near-cell drop and a finish cleanup.
-assert 'AddFinishAction(() =>' in code
+assert 'AddFinishAction(condition =>' in code
 assert 'Toils_Haul.StartCarryThing(TargetIndex.A, false, false, false)' in code
 assert 'Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell)' in code
 assert 'drop.defaultCompleteMode = ToilCompleteMode.Instant;' in code
