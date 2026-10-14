@@ -7,16 +7,15 @@
     <OutputType>Library</OutputType>
     <OutputPath>../1.6/Assemblies/</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <RestoreSources></RestoreSources>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp"><HintPath>$(RimWorldDir)/RimWorldWin64_Data/Managed/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="UnityEngine.CoreModule"><HintPath>$(RimWorldDir)/RimWorldWin64_Data/Managed/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="UnityEngine"><HintPath>$(RimWorldDir)/RimWorldWin64_Data/Managed/UnityEngine.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="0Harmony"><HintPath>$(HarmonyDll)</HintPath><Private>false</Private></Reference>
+    <!-- RimWorld 1.6 API reference assemblies, not redistributable game binaries. -->
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4871" ExcludeAssets="runtime" />
+    <!-- Harmony is supplied by the required Harmony mod at runtime. -->
+    <PackageReference Include="Lib.Harmony.Ref" Version="2.3.4" ExcludeAssets="runtime" />
+    <!-- Allows .NET Framework 4.7.2 targeting without a local RimWorld install. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
-  <Target Name="ValidateReferences" BeforeTargets="ResolveReferences">
-    <Error Condition="'$(RimWorldDir)' == ''" Text="Specify -p:RimWorldDir=YOUR_RIMWORLD_FOLDER" />
-    <Error Condition="'$(HarmonyDll)' == ''" Text="Specify -p:HarmonyDll=FULL_PATH_TO_0Harmony.dll (Harmony mod)" />
-  </Target>
 </Project>

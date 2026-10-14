@@ -38,10 +38,19 @@ assert 'JobMaker.MakeJob(JobDefOf.Kidnap, patient, exitCell)' in code
 assert 'rescue.count = 1;' in code
 assert 'JobDefOf.Kidnap' not in code.split('internal static class RetreatCasualtyRescuePatch')[0]
 # For active combat, use a custom near-cell drop and a finish cleanup.
-assert 'AddFinishAction(() =>' in code
+assert 'AddFinishAction(condition =>' in code
 assert 'Toils_Haul.StartCarryThing(TargetIndex.A, false, false, false)' in code
 assert 'Toils_Goto.GotoCell(TargetIndex.B, PathEndMode.OnCell)' in code
 assert 'drop.defaultCompleteMode = ToilCompleteMode.Instant;' in code
+# Regression: medics must work when there are no nearby enemies.
+assert 'if (enemies.Count == 0) return;' not in code
+assert 'Pawn nearest = enemies.OrderBy(e => e.Position.DistanceToSquared(pawn.Position)).FirstOrDefault();' in code
+assert '(nearest == null || pawn.Position.DistanceToSquared(nearest.Position) >= 144)' in code
+assert 'if (nearest == null) return;' in code
+project = (root/'Source/TacticalCombatAI.csproj').read_text()
+assert 'Krafs.Rimworld.Ref' in project
+assert 'Lib.Harmony.Ref' in project
+assert 'RimWorldDir' not in project
 assert 'RetreatRescue = true' in code
 assert 'ref RetreatRescue, "retreatRescue", true' in code
 print('PASS: XML/project parses, base-method Harmony patch, retreat-only gate, same-faction casualty, vanilla pickup, cleanup and settings structural checks. NOT compiled or game-tested.')

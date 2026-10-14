@@ -1,6 +1,6 @@
 # Tactical Combat AI — RimWorld 1.6
 
-**Status: experimental source prototype. Not compiled against RimWorld 1.6 or tested in-game.**
+**Status: experimental prototype. Automated compilation is being established; no in-game validation yet.**
 
 A Harmony-based mod prototype adding tactical decisions for **non-player humanlike faction pawns** (hostile raiders and allied NPCs).
 
@@ -17,23 +17,41 @@ A Harmony-based mod prototype adding tactical decisions for **non-player humanli
 
 All features can be enabled or disabled independently from mod settings. Only supported AI job-giver paths are patched, so not every modded or vanilla encounter uses these behaviors.
 
-## Prerequisites
+## Get a compiled test build (no game DLL uploads)
 
-- RimWorld **1.6 for Windows**, including the game's `Assembly-CSharp.dll` and Unity assemblies
-- [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) and its `0Harmony.dll`
-- .NET SDK / Visual Studio Build Tools with .NET Framework 4.7.2 reference assemblies
+This repository has a [GitHub Actions build workflow](.github/workflows/build-rimworld.yml).
+The workflow restores publicly available RimWorld 1.6 reference assemblies and Harmony
+reference assemblies, compiles `TacticalCombatAI.dll`, runs structural tests, and
+produces `TacticalCombatAI-RimWorld-1.6-test.zip` as a workflow artifact **only if the build succeeds**.
 
-## Build
+1. Open the **Actions** tab and select **Build RimWorld 1.6 test mod**.
+2. Choose **Run workflow** (or use the automatic push/PR build).
+3. Open the successful run, download the **TacticalCombatAI-RimWorld-1.6-test** artifact.
+4. Unzip the downloaded GitHub artifact to obtain `TacticalCombatAI-RimWorld-1.6-test.zip`.
+5. Extract that inner ZIP into RimWorld's `Mods` directory. It contains a single
+   `TacticalCombatAI` folder with `About`, `LoadFolders.xml`, and
+   `1.6/Assemblies/TacticalCombatAI.dll` plus the custom JobDefs.
+6. Enable the **Harmony** mod before **Tactical Combat AI**, restart RimWorld 1.6,
+   and test on a disposable save.
 
-Run PowerShell from the repository root, replacing the paths as needed:
+**Important:** Passing compilation does not prove that Harmony patches resolve,
+jobs run correctly, or friendly retreat extraction behaves safely. Check RimWorld's
+in-game log for red errors. Test without Combat Extended or other AI mods first.
+
+## Build locally
+
+Install a .NET SDK (8 or newer) and run:
 
 ```powershell
-.\Build-Windows.ps1 -RimWorldDir "C:\Program Files (x86)\Steam\steamapps\common\RimWorld" -HarmonyDll "C:\Program Files (x86)\Steam\steamapps\workshop\content\294100\2009463077\Current\Assemblies\0Harmony.dll"
+dotnet restore Source/TacticalCombatAI.csproj
+dotnet build Source/TacticalCombatAI.csproj -c Release --no-restore
 ```
 
-After a successful build, the DLL should be at `1.6/Assemblies/TacticalCombatAI.dll`. **This repository does not include a compiled DLL.**
-
-Copy the repository folder into `RimWorld/Mods`, enable Harmony before Tactical Combat AI, and restart the game.
+The output DLL is `1.6/Assemblies/TacticalCombatAI.dll`. No RimWorld installation
+or private game assemblies are needed **for compilation** because
+`Krafs.Rimworld.Ref` provides RimWorld API signatures and `Lib.Harmony.Ref`
+provides Harmony signatures. The actual game and Harmony mod are still needed
+**to run the mod**.
 
 ## Structural tests
 

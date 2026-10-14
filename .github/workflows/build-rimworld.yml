@@ -1,0 +1,56 @@
+name: Build RimWorld 1.6 test mod
+
+on:
+  push:
+    branches: [main, "build/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Run source and XML checks
+        run: python Tests/test_static.py
+
+      - name: Restore public reference assemblies
+        run: dotnet restore Source/TacticalCombatAI.csproj
+
+      - name: Compile against RimWorld 1.6 references
+        run: dotnet build Source/TacticalCombatAI.csproj --configuration Release --no-restore
+
+      - name: Create installable mod ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dll = '1.6/Assemblies/TacticalCombatAI.dll'
+          if (-not (Test-Path $dll)) { throw "Missing compiled DLL: $dll" }
+          $mod = 'staging/TacticalCombatAI'
+          New-Item -ItemType Directory -Force "$mod/About", "$mod/1.6/Assemblies", "$mod/1.6/Defs/JobDefs" | Out-Null
+          Copy-Item 'About/About.xml' "$mod/About/About.xml"
+          Copy-Item 'LoadFolders.xml' "$mod/LoadFolders.xml"
+          Copy-Item '1.6/Defs/JobDefs/TCA_JobDefs.xml' "$mod/1.6/Defs/JobDefs/TCA_JobDefs.xml"
+          Copy-Item $dll "$mod/1.6/Assemblies/TacticalCombatAI.dll"
+          Copy-Item 'README.md' "$mod/README.md"
+          Compress-Archive -Path $mod -DestinationPath 'TacticalCombatAI-RimWorld-1.6-test.zip' -Force
+          if (-not (Test-Path 'TacticalCombatAI-RimWorld-1.6-test.zip')) { throw 'Failed to create ZIP' }
+
+      - name: Upload RimWorld test mod ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: TacticalCombatAI-RimWorld-1.6-test
+          path: TacticalCombatAI-RimWorld-1.6-test.zip
+          if-no-files-found: error
+          retention-days: 30

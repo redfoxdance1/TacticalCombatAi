@@ -109,9 +109,8 @@ namespace TacticalCombatAI
                         enemies.Add(other);
                     }
                 }
-                if (enemies.Count == 0) return;
-
-                Pawn nearest = enemies.OrderBy(e => e.Position.DistanceToSquared(pawn.Position)).First();
+                // Medics may still tend downed allies after nearby enemies have left.
+                Pawn nearest = enemies.OrderBy(e => e.Position.DistanceToSquared(pawn.Position)).FirstOrDefault();
                 bool manipulates = pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation);
 
                 // First aid is possible only if the patient is lying down and the medic is not under close threat.
@@ -119,7 +118,7 @@ namespace TacticalCombatAI
                 if (TacticalMod.Settings.Medics && manipulates &&
                     pawn.skills != null && !pawn.WorkTagIsDisabled(WorkTags.Caring) &&
                     pawn.skills.GetSkill(SkillDefOf.Medicine).Level >= 4 && now - state.LastAid > 750 &&
-                    pawn.Position.DistanceToSquared(nearest.Position) >= 144)
+                    (nearest == null || pawn.Position.DistanceToSquared(nearest.Position) >= 144))
                 {
                     Pawn patient = allies.Where(a => (a.Downed || a.InBed()) &&
                                           a.Position.InHorDistOf(pawn.Position, 9f) &&
@@ -138,6 +137,9 @@ namespace TacticalCombatAI
                         return;
                     }
                 }
+
+                // Evacuation and combat maneuvers need a nearby hostile to evaluate.
+                if (nearest == null) return;
 
                 // Unlike vanilla Rescue, custom evacuation has a reachable safe-ground destination and needs no bed.
                 // Only pick up a threatened, living, unreserved downed ally.
@@ -385,7 +387,7 @@ namespace TacticalCombatAI
             this.FailOn(() => job.GetTarget(TargetIndex.A).Thing is Pawn p && (!p.Downed || p.Dead));
             // If combat or pathfinding interrupts our short-range rescue,
             // never leave the patient attached to a pawn that has resumed fighting.
-            AddFinishAction(() =>
+            AddFinishAction(condition =>
             {
                 if (!pawn.Spawned || pawn.carryTracker == null ||
                     pawn.carryTracker.CarriedThing != job.GetTarget(TargetIndex.A).Thing) return;
