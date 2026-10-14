@@ -29,7 +29,8 @@ assert '[HarmonyPatch(typeof(JobGiver_ExitMap), "TryGiveJob")]' in code
 # All JobGiver_ExitMap subclasses must be eligible: panic fleeing may not
 # use JobGiver_ExitMapBest, while the exit-map Goto is still mandatory.
 assert 'if (!(__instance is JobGiver_ExitMapBest)) return;' not in code
-assert 'dutyName == "Kidnap" || dutyName == "Steal" || dutyName == "TakeWoundedGuest"' in code
+assert 'if (dutyName == "Kidnap"' not in code
+assert 'string dutyName = pawn.mindState.duty?.def?.defName;' in code
 assert 'RetreatDiagnostics = false' in code
 assert 'Log retreat-rescue diagnostics (for testing)' in code
 assert 'giver=" + __instance.GetType().Name' in code
