@@ -36,7 +36,10 @@ assert 'Log retreat-rescue diagnostics (for testing)' in code
 assert 'giver=" + __instance.GetType().Name' in code
 # Optional Combat Extended integration must not override its custom jobs.
 assert 'ModsConfig.IsActive("ceteam.combatextended")' in code
-assert '__result.def != JobDefOf.Goto && __result.def != JobDefOf.Wait_Combat' in code
+assert '__result.def != JobDefOf.Goto' in code
+assert '__result.def != JobDefOf.Wait_Combat' in code
+assert '__result.def != JobDefOf.AttackStatic' in code
+assert '__result.def != JobDefOf.AttackMelee' in code
 # Never turn arbitrary movement/combat/dig actions into a kidnapping job.
 assert '__result.def != JobDefOf.Goto || !__result.exitMapOnArrival' in code
 # Keep vanilla victim selection out of this patch; only same-faction downed NPCs.
